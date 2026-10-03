@@ -3,61 +3,799 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Clasificador de Cuadriláteros</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-5" style="max-width: 560px;">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h1 class="h4 text-center mb-4">Clasificador de Cuadriláteros</h1>
+  <title>Detective de Figuras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #2b2d42;
+      --ink-soft: #5c5f7a;
+      --card: #ffffff;
+      --sky-1: #7f5af0;
+      --sky-2: #2cb1ff;
+      --sky-3: #ff8fab;
+      --c-a: #ff4d6d;
+      --c-b: #3a86ff;
+      --c-c: #06d6a0;
+      --c-d: #ff9f1c;
+      --yellow: #ffd60a;
+      --ok: #06d6a0;
+      --bad: #ef476f;
+      --radius: 28px;
+      --shadow: 0 10px 0 rgba(43, 45, 66, .12), 0 20px 40px rgba(43, 45, 66, .18);
+    }
 
-        <form method="post">
-          <div class="row g-3">
-            <div class="col-6">
-              <h2 class="h6">Lados</h2>
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
+    body {
+      font-family: "Fredoka", system-ui, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--sky-1) 0%, var(--sky-2) 55%, var(--sky-3) 100%);
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---------- figuras flotantes de fondo ---------- */
+    .bg-shapes { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .bg-shapes span {
+      position: absolute;
+      opacity: .22;
+      animation: flotar 14s ease-in-out infinite;
+    }
+    .bg-shapes .s1 { width: 90px; height: 90px; background: #fff; border-radius: 18px; top: 8%; left: 6%; }
+    .bg-shapes .s2 { width: 70px; height: 70px; background: var(--yellow); transform: rotate(45deg); top: 70%; left: 4%; animation-delay: -3s; }
+    .bg-shapes .s3 { width: 140px; height: 70px; background: #fff; border-radius: 14px; top: 15%; right: 8%; animation-delay: -6s; }
+    .bg-shapes .s4 { width: 120px; height: 60px; background: var(--c-c); transform: skewX(-25deg); bottom: 8%; right: 10%; animation-delay: -9s; }
+    .bg-shapes .s5 { width: 0; height: 0; border-left: 60px solid transparent; border-right: 60px solid transparent; border-bottom: 80px solid #fff; top: 45%; left: 48%; animation-delay: -4s; }
+    .bg-shapes .s6 { width: 50px; height: 50px; background: var(--c-a); border-radius: 50%; top: 85%; left: 40%; animation-delay: -7s; }
+
+    @keyframes flotar {
+      0%, 100% { translate: 0 0; rotate: 0deg; }
+      50% { translate: 20px -40px; rotate: 25deg; }
+    }
+
+    /* ---------- layout ---------- */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    header.hero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 22px;
+    }
+    .mascota {
+      font-size: 72px;
+      line-height: 1;
+      filter: drop-shadow(0 6px 0 rgba(0,0,0,.15));
+      animation: saltito 2.2s ease-in-out infinite;
+      cursor: pointer;
+      user-select: none;
+    }
+    @keyframes saltito {
+      0%, 100% { transform: translateY(0) rotate(-4deg); }
+      50% { transform: translateY(-12px) rotate(4deg); }
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-shadow: 0 5px 0 rgba(43, 45, 66, .25);
+    }
+    .hero p { margin: 4px 0 0; font-size: clamp(1rem, 2.6vw, 1.25rem); opacity: .95; }
+
+    .burbuja {
+      position: relative;
+      background: #fff;
+      color: var(--ink);
+      border-radius: 22px;
+      padding: 12px 18px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      max-width: 680px;
+      margin: 0 auto 22px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    .burbuja::before {
+      content: "";
+      position: absolute;
+      top: -12px; left: 50%;
+      translate: -50% 0;
+      border: 12px solid transparent;
+      border-top: 0;
+      border-bottom-color: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 22px;
+    }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ---------- ejemplos ---------- */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .chip {
+      font: inherit;
+      font-weight: 600;
+      border: 0;
+      cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #f1efff;
+      color: var(--sky-1);
+      box-shadow: 0 4px 0 #d9d3ff;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .chip:hover { transform: translateY(-2px); }
+    .chip:active { transform: translateY(3px); box-shadow: 0 1px 0 #d9d3ff; }
+
+    /* ---------- campos ---------- */
+    .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 420px) { .campos { grid-template-columns: 1fr; } }
+    .grupo h3 { margin: 0 0 10px; font-size: 1.05rem; color: var(--ink-soft); }
+
+    .campo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      background: #f7f7fb;
+      border-radius: 18px;
+      padding: 6px 8px 6px 6px;
+      border: 3px solid transparent;
+      transition: border-color .2s, transform .2s;
+    }
+    .campo:focus-within { border-color: var(--col); transform: scale(1.03); }
+    .etiqueta {
+      flex: 0 0 auto;
+      width: 44px; height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.3rem;
+      background: var(--col);
+      box-shadow: 0 4px 0 rgba(0,0,0,.12);
+    }
+    .campo input {
+      width: 100%;
+      min-width: 0;
+      font: inherit;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--ink);
+      border: 0;
+      outline: none;
+      background: transparent;
+      padding: 6px 4px;
+    }
+    .campo .unidad { color: var(--ink-soft); font-weight: 600; padding-right: 6px; }
+    .campo.a, .campo.A { --col: var(--c-a); }
+    .campo.b, .campo.B { --col: var(--c-b); }
+    .campo.c, .campo.C { --col: var(--c-c); }
+    .campo.d, .campo.D { --col: var(--c-d); }
+
+    /* ---------- medidor de ángulos ---------- */
+    .medidor { margin: 8px 0 20px; }
+    .medidor .fila { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 6px; }
+    .barra {
+      height: 22px;
+      border-radius: 999px;
+      background: #eceaf6;
+      overflow: hidden;
+      position: relative;
+    }
+    .barra .relleno {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--c-b), var(--sky-1));
+      transition: width .35s cubic-bezier(.3,1.6,.5,1), background .3s;
+    }
+    .barra.lleno .relleno { background: linear-gradient(90deg, var(--c-c), #2ec4b6); }
+    .barra.pasado .relleno { background: linear-gradient(90deg, var(--c-d), var(--bad)); }
+
+    /* ---------- botones ---------- */
+    .acciones { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      font: inherit;
+      font-weight: 700;
+      font-size: 1.25rem;
+      border: 0;
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 14px 22px;
+      text-decoration: none;
+      text-align: center;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .btn-principal {
+      flex: 1 1 220px;
+      color: var(--ink);
+      background: var(--yellow);
+      box-shadow: 0 7px 0 #e0a800;
+      animation: latido 2.5s ease-in-out infinite;
+    }
+    .btn-secundario {
+      flex: 0 1 auto;
+      background: #eceaf6;
+      color: var(--ink-soft);
+      box-shadow: 0 7px 0 #cfcbe6;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+    @keyframes latido { 0%, 100% { scale: 1; } 50% { scale: 1.035; } }
+
+    /* ---------- lienzo ---------- */
+    .lienzo {
+      background:
+        linear-gradient(#eef1ff 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(90deg, #eef1ff 1px, transparent 1px) 0 0 / 24px 24px,
+        #fbfbff;
+      border-radius: 22px;
+      border: 3px dashed #d9dcf5;
+      aspect-ratio: 5 / 4;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .lienzo svg { width: 100%; height: 100%; }
+    .lienzo .vacio {
+      position: absolute;
+      text-align: center;
+      color: var(--ink-soft);
+      font-weight: 600;
+      font-size: 1.15rem;
+    }
+    .lienzo .vacio div { font-size: 54px; animation: saltito 2s ease-in-out infinite; }
+    .nota { min-height: 1.4em; margin: 10px 4px 0; color: var(--ink-soft); font-size: .98rem; }
+
+    .figura-dibujada { animation: aparecer .5s cubic-bezier(.3,1.6,.5,1); transform-origin: center; transform-box: fill-box; }
+    @keyframes aparecer { from { scale: .6; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+    /* ---------- resultado ---------- */
+    .resultado {
+      margin-top: 18px;
+      border-radius: 22px;
+      padding: 18px;
+      display: none;
+      gap: 16px;
+      align-items: center;
+    }
+    .resultado.visible { display: flex; animation: rebote .6s cubic-bezier(.3,1.6,.5,1); }
+    .resultado.exito { background: #e6fff7; border: 3px solid var(--ok); }
+    .resultado.error { background: #fff0f3; border: 3px solid var(--bad); animation: temblar .5s; }
+    .resultado .icono { font-size: 64px; line-height: 1; flex: 0 0 auto; }
+    .resultado h3 { margin: 0 0 4px; font-size: 1.7rem; }
+    .resultado p, .resultado ul { margin: 0; font-size: 1.05rem; color: var(--ink-soft); }
+    .resultado ul { padding-left: 18px; }
+    @keyframes rebote { 0% { scale: .7; opacity: 0; } 100% { scale: 1; opacity: 1; } }
+    @keyframes temblar {
+      0%, 100% { translate: 0; }
+      20%, 60% { translate: -10px; }
+      40%, 80% { translate: 10px; }
+    }
+
+    /* ---------- álbum ---------- */
+    .album { margin-top: 22px; }
+    .album .cabecera { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+    .album .contador { font-weight: 700; color: var(--sky-1); font-size: 1.1rem; }
+    .stickers {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 700px) { .stickers { grid-template-columns: repeat(3, 1fr); } }
+    .sticker {
+      font: inherit;
+      border: 0;
+      cursor: pointer;
+      background: #f3f3f8;
+      border-radius: 20px;
+      padding: 12px 6px 10px;
+      text-align: center;
+      color: #a3a5b8;
+      transition: transform .2s, background .3s;
+      position: relative;
+    }
+    .sticker svg { width: 64px; height: 52px; display: block; margin: 0 auto 6px; filter: grayscale(1) opacity(.35); transition: filter .4s; }
+    .sticker .nombre { font-weight: 600; font-size: .95rem; }
+    .sticker:hover { transform: translateY(-4px) rotate(-2deg); }
+    .sticker.ganado { background: #fff9db; color: var(--ink); box-shadow: 0 5px 0 #f5d76e; }
+    .sticker.ganado svg { filter: none; }
+    .sticker.ganado::after {
+      content: "⭐";
+      position: absolute;
+      top: -8px; right: -4px;
+      font-size: 22px;
+      animation: saltito 1.8s ease-in-out infinite;
+    }
+    .sticker.nuevo { animation: premio .9s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes premio { 0% { scale: 1; } 40% { scale: 1.35; rotate: 10deg; } 100% { scale: 1; rotate: 0deg; } }
+
+    .sonido {
+      position: fixed;
+      top: 14px; right: 14px;
+      z-index: 5;
+      font-size: 24px;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 0;
+      cursor: pointer;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    footer { text-align: center; color: #fff; margin-top: 28px; opacity: .9; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="bg-shapes" aria-hidden="true">
+    <span class="s1"></span><span class="s2"></span><span class="s3"></span>
+    <span class="s4"></span><span class="s5"></span><span class="s6"></span>
+  </div>
+
+  <button class="sonido" id="btnSonido" type="button" title="Activar o silenciar sonidos">🔊</button>
+
+  <div class="wrap">
+    <header class="hero">
+      <div class="mascota" id="mascota" title="¡Hola! Soy Cuadri">🦉</div>
+      <div>
+        <h1>Detective de Figuras</h1>
+        <p>Clasificador de cuadriláteros</p>
+      </div>
+    </header>
+
+    <div class="burbuja" id="burbuja">¡Hola! Soy <b>Cuadri</b> 🦉. Escribe los 4 lados y los 4 ángulos y descubriré qué figura es. ¿Sin ideas? ¡Prueba un ejemplo!</div>
+
+    <div class="grid">
+      <!-- ========== formulario ========== -->
+      <section class="card">
+        <h2>✏️ Pistas de la figura</h2>
+
+        <div class="chips">
+          <button type="button" class="chip" data-ejemplo="cuadrado">🟥 Cuadrado</button>
+          <button type="button" class="chip" data-ejemplo="rectangulo">🟦 Rectángulo</button>
+          <button type="button" class="chip" data-ejemplo="rombo">🔷 Rombo</button>
+          <button type="button" class="chip" data-ejemplo="romboide">🟩 Romboide</button>
+          <button type="button" class="chip" data-ejemplo="trapecio">🟧 Trapecio</button>
+          <button type="button" class="chip" data-ejemplo="ninguna">❓ Sorpresa</button>
+        </div>
+
+        <form method="post" id="formulario" autocomplete="off">
+          <div class="campos">
+            <div class="grupo">
+              <h3>📏 Lados</h3>
               {% for l in lados %}
-              <div class="input-group mb-2">
-                <span class="input-group-text">{{ l }}</span>
-                <input type="number" step="any" class="form-control"
-                       name="{{ l }}" value="{{ valores.get(l, '') }}" required>
-              </div>
+              <label class="campo {{ l }}">
+                <span class="etiqueta">{{ l }}</span>
+                <input type="number" step="any" name="{{ l }}" placeholder="0"
+                       value="{{ valores.get(l, '') }}" required>
+                <span class="unidad">cm</span>
+              </label>
               {% endfor %}
             </div>
-            <div class="col-6">
-              <h2 class="h6">Ángulos (°)</h2>
+            <div class="grupo">
+              <h3>📐 Ángulos</h3>
               {% for g in angulos %}
-              <div class="input-group mb-2">
-                <span class="input-group-text">{{ g }}</span>
-                <input type="number" step="any" class="form-control"
-                       name="{{ g }}" value="{{ valores.get(g, '') }}" required>
-              </div>
+              <label class="campo {{ g }}">
+                <span class="etiqueta">{{ g }}</span>
+                <input type="number" step="any" name="{{ g }}" placeholder="0"
+                       value="{{ valores.get(g, '') }}" required>
+                <span class="unidad">°</span>
+              </label>
               {% endfor %}
             </div>
           </div>
 
-          <div class="d-flex gap-2 justify-content-center mt-3">
-            <button type="submit" class="btn btn-primary">Clasificar</button>
-            <a href="/" class="btn btn-outline-secondary">Limpiar</a>
+          <div class="medidor">
+            <div class="fila"><span>Suma de ángulos</span><span id="sumaTexto">0° / 360°</span></div>
+            <div class="barra" id="barra"><div class="relleno" id="relleno"></div></div>
+          </div>
+
+          <div class="acciones">
+            <button type="submit" class="btn btn-principal">🔍 ¡Descubrir figura!</button>
+            <a href="/" class="btn btn-secundario" id="btnLimpiar">🧽 Limpiar</a>
           </div>
         </form>
+      </section>
 
-        {% if errores %}
-        <div class="alert alert-danger mt-4 mb-0">
-          <ul class="mb-0">
-            {% for e in errores %}<li>{{ e }}</li>{% endfor %}
-          </ul>
+      <!-- ========== dibujo y resultado ========== -->
+      <section class="card">
+        <h2>🎨 Así se ve tu figura</h2>
+        <div class="lienzo">
+          <svg id="dibujo" viewBox="0 0 400 320" role="img" aria-label="Dibujo del cuadrilátero"></svg>
+          <div class="vacio" id="vacio"><div>🖍️</div>Escribe los datos y la dibujo aquí</div>
         </div>
-        {% endif %}
+        <p class="nota" id="nota"></p>
 
-        {% if resultado %}
-        <div class="alert alert-success mt-4 mb-0">
-          <h2 class="h5">{{ resultado }}</h2>
-          <p class="mb-0">{{ explicacion }}</p>
+        <div class="resultado {% if errores %}error visible{% elif resultado %}exito visible{% endif %}" id="resultado">
+          <div class="icono" id="resIcono">{% if errores %}🙈{% elif resultado %}🎉{% endif %}</div>
+          <div>
+            <h3 id="resTitulo">{% if errores %}¡Ups! Algo no cuadra{% elif resultado %}{{ resultado }}{% endif %}</h3>
+            <div id="resCuerpo">
+              {% if errores %}
+              <ul>{% for e in errores %}<li>{{ e }}</li>{% endfor %}</ul>
+              {% elif resultado %}
+              <p>{{ explicacion }}</p>
+              {% endif %}
+            </div>
+          </div>
         </div>
-        {% endif %}
-      </div>
+      </section>
     </div>
+
+    <!-- ========== álbum ========== -->
+    <section class="card album">
+      <div class="cabecera">
+        <h2>📒 Mi álbum de figuras</h2>
+        <span class="contador" id="contador">0 / 6 descubiertas</span>
+      </div>
+      <div class="stickers" id="stickers"></div>
+    </section>
+
+    <footer>Examen Final · Grupo 1 · Análisis de Algoritmos · UPN 2026</footer>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    const LADOS = ["a", "b", "c", "d"];
+    const ANGULOS = ["A", "B", "C", "D"];
+    const COLORES = { a: "#ff4d6d", b: "#3a86ff", c: "#06d6a0", d: "#ff9f1c" };
+
+    const EJEMPLOS = {
+      cuadrado:   { a: 5,  b: 5, c: 5, d: 5, A: 90, B: 90,  C: 90,  D: 90 },
+      rectangulo: { a: 8,  b: 5, c: 8, d: 5, A: 90, B: 90,  C: 90,  D: 90 },
+      rombo:      { a: 6,  b: 6, c: 6, d: 6, A: 60, B: 120, C: 60,  D: 120 },
+      romboide:   { a: 8,  b: 5, c: 8, d: 5, A: 60, B: 120, C: 60,  D: 120 },
+      trapecio:   { a: 10, b: 5, c: 5, d: 5, A: 60, B: 60,  C: 120, D: 120 },
+      ninguna:    { a: 7,  b: 5, c: 6, d: 4, A: 70, B: 95,  C: 100, D: 95 },
+    };
+
+    // Figuras del álbum: clave = texto que devuelve Python
+    const FIGURAS = [
+      { clave: "CUADRADO",   nombre: "Cuadrado",   emoji: "🟥", color: "#ff4d6d", pts: "12,6 52,6 52,46 12,46" },
+      { clave: "RECTANGULO", nombre: "Rectángulo", emoji: "🟦", color: "#3a86ff", pts: "4,12 60,12 60,42 4,42" },
+      { clave: "ROMBO",      nombre: "Rombo",      emoji: "🔷", color: "#7f5af0", pts: "32,2 58,26 32,50 6,26" },
+      { clave: "ROMBOIDE",   nombre: "Romboide",   emoji: "🟩", color: "#06d6a0", pts: "16,12 62,12 48,42 2,42" },
+      { clave: "TRAPECIO",   nombre: "Trapecio",   emoji: "🟧", color: "#ff9f1c", pts: "18,10 46,10 62,44 2,44" },
+      { clave: "NINGUNA DE LAS 5 FIGURAS", nombre: "Trapezoide", emoji: "❓", color: "#ef476f", pts: "8,14 50,4 60,44 14,38" },
+    ];
+
+    const MENSAJES = {
+      CUADRADO:   "¡Bravo! Encontraste un <b>cuadrado</b>: perfecto por todos lados 😎",
+      RECTANGULO: "¡Genial! Es un <b>rectángulo</b>, como una puerta o una pantalla 📺",
+      ROMBO:      "¡Wow! Un <b>rombo</b>, ¡como un diamante! 💎",
+      ROMBOIDE:   "¡Súper! Es un <b>romboide</b>, un rectángulo que se inclinó 😄",
+      TRAPECIO:   "¡Muy bien! Un <b>trapecio</b>, ¡como la falda de una montaña! ⛰️",
+      "NINGUNA DE LAS 5 FIGURAS": "¡Qué misteriosa! No es ninguna de las 5 figuras 🕵️",
+    };
+
+    const form = document.getElementById("formulario");
+    const svg = document.getElementById("dibujo");
+    const vacio = document.getElementById("vacio");
+    const nota = document.getElementById("nota");
+    const burbuja = document.getElementById("burbuja");
+    const mascota = document.getElementById("mascota");
+    const resBox = document.getElementById("resultado");
+    const resIcono = document.getElementById("resIcono");
+    const resTitulo = document.getElementById("resTitulo");
+    const resCuerpo = document.getElementById("resCuerpo");
+
+    // ---------- almacenamiento seguro ----------
+    const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+    const leer = (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } };
+
+    // ---------- sonidos (Web Audio, sin archivos) ----------
+    let sonidoActivo = leer("detective-sonido", true);
+    let audioCtx = null;
+    const btnSonido = document.getElementById("btnSonido");
+    const pintarBtnSonido = () => btnSonido.textContent = sonidoActivo ? "🔊" : "🔇";
+    pintarBtnSonido();
+    btnSonido.addEventListener("click", () => {
+      sonidoActivo = !sonidoActivo;
+      guardar("detective-sonido", sonidoActivo);
+      pintarBtnSonido();
+      if (sonidoActivo) tocar([660]);
+    });
+
+    function tocar(notas, dur = 0.12, tipo = "triangle") {
+      if (!sonidoActivo) return;
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        notas.forEach((f, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const t = audioCtx.currentTime + i * dur;
+          osc.type = tipo;
+          osc.frequency.value = f;
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + dur * 1.6);
+          osc.connect(gain).connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + dur * 1.7);
+        });
+      } catch (e) {}
+    }
+    const sonidoExito = () => tocar([523, 659, 784, 1047], 0.11);
+    const sonidoError = () => tocar([330, 247], 0.18, "sawtooth");
+    const sonidoClick = () => tocar([880], 0.05);
+
+    // ---------- lectura del formulario ----------
+    function leerValores() {
+      const v = {};
+      [...LADOS, ...ANGULOS].forEach(k => v[k] = parseFloat(form.elements[k].value));
+      return v;
+    }
+
+    function hablar(html) {
+      burbuja.innerHTML = html;
+      burbuja.animate([{ scale: .95 }, { scale: 1.03 }, { scale: 1 }], { duration: 350 });
+    }
+
+    // ---------- medidor de suma de ángulos ----------
+    function actualizarMedidor(v) {
+      const suma = ANGULOS.reduce((s, k) => s + (isNaN(v[k]) ? 0 : v[k]), 0);
+      const barra = document.getElementById("barra");
+      document.getElementById("relleno").style.width = Math.min(suma / 360 * 100, 100) + "%";
+      barra.classList.toggle("lleno", suma === 360);
+      barra.classList.toggle("pasado", suma > 360);
+      const emoji = suma === 360 ? " ✅" : suma > 360 ? " 😵" : "";
+      document.getElementById("sumaTexto").textContent = `${+suma.toFixed(2)}° / 360°${emoji}`;
+    }
+
+    // ---------- dibujo del cuadrilátero ----------
+    // Se recorre A→B→C→D girando en cada vértice; el lado d cierra la figura.
+    function dibujar(v, animar) {
+      const ok = ["a", "b", "c"].every(k => v[k] > 0) && ["B", "C"].every(k => v[k] > 0 && v[k] < 180);
+      svg.innerHTML = "";
+      if (!ok) { vacio.style.display = ""; nota.textContent = ""; return; }
+      vacio.style.display = "none";
+
+      const rad = g => g * Math.PI / 180;
+      let x = 0, y = 0, h = 0;
+      const P = [[0, 0]];
+      x += v.a; P.push([x, y]);
+      h += 180 - v.B; x += v.b * Math.cos(rad(h)); y += v.b * Math.sin(rad(h)); P.push([x, y]);
+      h += 180 - v.C; x += v.c * Math.cos(rad(h)); y += v.c * Math.sin(rad(h)); P.push([x, y]);
+
+      // escalar al lienzo (y invertida para SVG)
+      const xs = P.map(p => p[0]), ys = P.map(p => p[1]);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      const W = 400, H = 320, pad = 56;
+      const esc = Math.min((W - 2 * pad) / ((maxX - minX) || 1), (H - 2 * pad) / ((maxY - minY) || 1));
+      const offX = (W - (maxX - minX) * esc) / 2, offY = (H - (maxY - minY) * esc) / 2;
+      const Q = P.map(([px, py]) => [offX + (px - minX) * esc, H - (offY + (py - minY) * esc)]);
+      const cx = Q.reduce((s, q) => s + q[0], 0) / 4, cy = Q.reduce((s, q) => s + q[1], 0) / 4;
+
+      const ns = "http://www.w3.org/2000/svg";
+      const el = (tag, attrs, txt) => {
+        const e = document.createElementNS(ns, tag);
+        for (const k in attrs) e.setAttribute(k, attrs[k]);
+        if (txt !== undefined) e.textContent = txt;
+        return e;
+      };
+      const g = el("g", animar ? { class: "figura-dibujada" } : {});
+
+      g.appendChild(el("polygon", {
+        points: Q.map(q => q.join(",")).join(" "),
+        fill: "rgba(127, 90, 240, .12)", stroke: "none",
+      }));
+
+      // lados de colores
+      LADOS.forEach((k, i) => {
+        const p1 = Q[i], p2 = Q[(i + 1) % 4];
+        g.appendChild(el("line", {
+          x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1],
+          stroke: COLORES[k], "stroke-width": 7, "stroke-linecap": "round",
+        }));
+        const mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2;
+        const dx = mx - cx, dy = my - cy, n = Math.hypot(dx, dy) || 1;
+        const lx = mx + dx / n * 22, ly = my + dy / n * 22;
+        const valor = isNaN(v[k]) ? "?" : +v[k].toFixed(2);
+        g.appendChild(el("text", {
+          x: lx, y: ly, fill: COLORES[k], "font-size": 17, "font-weight": 700,
+          "text-anchor": "middle", "dominant-baseline": "middle", "font-family": "Fredoka, sans-serif",
+        }, `${k} = ${valor}`));
+      });
+
+      // vértices
+      ANGULOS.forEach((k, i) => {
+        const [qx, qy] = Q[i];
+        const dx = qx - cx, dy = qy - cy, n = Math.hypot(dx, dy) || 1;
+        g.appendChild(el("circle", { cx: qx, cy: qy, r: 9, fill: "#fff", stroke: "#2b2d42", "stroke-width": 3 }));
+        const valor = isNaN(v[k]) ? "?" : +v[k].toFixed(2);
+        g.appendChild(el("text", {
+          x: qx + dx / n * 30, y: qy + dy / n * 30, fill: "#2b2d42", "font-size": 16, "font-weight": 600,
+          "text-anchor": "middle", "dominant-baseline": "middle", "font-family": "Fredoka, sans-serif",
+        }, `${k} ${valor}°`));
+      });
+
+      svg.appendChild(g);
+
+      // ¿el lado d coincide con el cierre del dibujo?
+      const cierre = Math.hypot(P[3][0], P[3][1]);
+      if (v.d > 0 && Math.abs(cierre - v.d) > Math.max(0.05 * v.d, 0.01)) {
+        nota.textContent = `💡 Dato curioso: con a, b, c y los ángulos B y C, el lado d mediría ≈ ${cierre.toFixed(2)} cm.`;
+      } else {
+        nota.textContent = "";
+      }
+    }
+
+    // ---------- álbum ----------
+    let descubiertas = new Set(leer("detective-album", []));
+    function pintarAlbum(nueva) {
+      const cont = document.getElementById("stickers");
+      cont.innerHTML = "";
+      FIGURAS.forEach(f => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "sticker" + (descubiertas.has(f.clave) ? " ganado" : "") + (nueva === f.clave ? " nuevo" : "");
+        b.innerHTML = `<svg viewBox="0 0 64 52"><polygon points="${f.pts}" fill="${f.color}" stroke="#2b2d42" stroke-width="3" stroke-linejoin="round"/></svg>
+                       <span class="nombre">${descubiertas.has(f.clave) ? f.nombre : "???"}</span>`;
+        b.title = descubiertas.has(f.clave) ? `Ver ejemplo de ${f.nombre}` : "¡Aún no la descubres!";
+        b.addEventListener("click", () => {
+          if (descubiertas.has(f.clave)) {
+            const clave = Object.keys(EJEMPLOS)[FIGURAS.indexOf(f)];
+            cargarEjemplo(clave);
+          } else {
+            sonidoClick();
+            hablar("🤫 Esa figura todavía es un secreto. ¡Sigue explorando para descubrirla!");
+          }
+        });
+        cont.appendChild(b);
+      });
+      document.getElementById("contador").textContent = `${descubiertas.size} / 6 descubiertas`;
+    }
+
+    // ---------- resultado ----------
+    function mostrarResultado(r) {
+      resBox.classList.remove("visible", "exito", "error");
+      void resBox.offsetWidth; // reinicia la animación
+      if (r.ok) {
+        const fig = FIGURAS.find(f => f.clave === r.resultado);
+        resBox.classList.add("visible", "exito");
+        resIcono.textContent = fig ? fig.emoji : "🎉";
+        resTitulo.textContent = r.resultado;
+        resCuerpo.innerHTML = "";
+        const p = document.createElement("p");
+        p.textContent = r.explicacion;
+        resCuerpo.appendChild(p);
+
+        const esNueva = !descubiertas.has(r.resultado);
+        descubiertas.add(r.resultado);
+        guardar("detective-album", [...descubiertas]);
+        pintarAlbum(esNueva ? r.resultado : null);
+
+        let msg = MENSAJES[r.resultado] || "¡Figura descubierta! 🎉";
+        if (esNueva) msg += "<br>⭐ ¡Nueva figura en tu álbum!";
+        if (descubiertas.size === 6 && esNueva) msg = "🏆 ¡INCREÍBLE! ¡Completaste el álbum! Eres un verdadero detective de figuras 🏆";
+        hablar(msg);
+        mascota.textContent = "🦉";
+        sonidoExito();
+        festejar(fig ? fig.color : "#ffd60a", descubiertas.size === 6 && esNueva);
+      } else {
+        resBox.classList.add("visible", "error");
+        resIcono.textContent = "🙈";
+        resTitulo.textContent = "¡Ups! Algo no cuadra";
+        const ul = document.createElement("ul");
+        r.errores.forEach(e => { const li = document.createElement("li"); li.textContent = e; ul.appendChild(li); });
+        resCuerpo.innerHTML = "";
+        resCuerpo.appendChild(ul);
+        hablar("🤔 Mmm... revisa las pistas, hay algo raro. ¡Tú puedes!");
+        sonidoError();
+      }
+      resBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function festejar(color, grande) {
+      if (typeof confetti !== "function") return;
+      const colores = [color, "#ffd60a", "#ffffff", "#7f5af0", "#2cb1ff"];
+      confetti({ particleCount: grande ? 250 : 120, spread: 90, origin: { y: 0.6 }, colors: colores });
+      if (grande) {
+        setTimeout(() => confetti({ particleCount: 120, angle: 60, spread: 70, origin: { x: 0 }, colors: colores }), 250);
+        setTimeout(() => confetti({ particleCount: 120, angle: 120, spread: 70, origin: { x: 1 }, colors: colores }), 400);
+      }
+    }
+
+    // ---------- eventos ----------
+    function cargarEjemplo(clave) {
+      const ej = EJEMPLOS[clave];
+      [...LADOS, ...ANGULOS].forEach(k => form.elements[k].value = ej[k]);
+      sonidoClick();
+      const v = leerValores();
+      actualizarMedidor(v);
+      dibujar(v, true);
+      resBox.classList.remove("visible");
+      hablar("✨ ¡Listo! Ya puse las pistas. Ahora presiona <b>¡Descubrir figura!</b>");
+    }
+
+    document.querySelectorAll("[data-ejemplo]").forEach(b =>
+      b.addEventListener("click", () => cargarEjemplo(b.dataset.ejemplo)));
+
+    form.addEventListener("input", () => {
+      const v = leerValores();
+      actualizarMedidor(v);
+      dibujar(v, false);
+    });
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const datos = {};
+      [...LADOS, ...ANGULOS].forEach(k => datos[k] = form.elements[k].value);
+      try {
+        const resp = await fetch("/api/clasificar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos),
+        });
+        mostrarResultado(await resp.json());
+      } catch (e) {
+        form.submit(); // si falla la API, se envía el formulario normal
+      }
+    });
+
+    document.getElementById("btnLimpiar").addEventListener("click", (ev) => {
+      ev.preventDefault();
+      form.reset();
+      [...LADOS, ...ANGULOS].forEach(k => form.elements[k].value = "");
+      const v = leerValores();
+      actualizarMedidor(v);
+      dibujar(v, false);
+      resBox.classList.remove("visible");
+      sonidoClick();
+      hablar("🧽 ¡Todo limpio! Escribe nuevas pistas o prueba un ejemplo.");
+    });
+
+    mascota.addEventListener("click", () => {
+      const frases = [
+        "🦉 ¿Sabías que todos los cuadriláteros tienen ángulos que suman 360°?",
+        "🦉 Un cuadrado también es un rombo... ¡pero con ángulos rectos!",
+        "🦉 El trapecio tiene al menos un par de lados paralelos.",
+        "🦉 ¡Ulula! Toca los stickers del álbum para ver ejemplos.",
+        "🦉 Los lados opuestos de un rectángulo miden lo mismo.",
+      ];
+      tocar([784, 988], 0.08);
+      hablar(frases[Math.floor(Math.random() * frases.length)]);
+    });
+
+    // estado inicial (por si el servidor devolvió valores)
+    const inicial = leerValores();
+    actualizarMedidor(inicial);
+    dibujar(inicial, true);
+    pintarAlbum();
+  </script>
 </body>
 </html>

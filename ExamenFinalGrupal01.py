@@ -40,29 +40,34 @@ def clasificar_cuadrilatero(a, b, c, d, A, B, C, D):
 
 
 # --- Programa principal ---
-while True:
-    print("=== Clasificador de Cuadrilateros ===")
-    a = float(input("Ingrese la longitud del lado a: "))
-    b = float(input("Ingrese la longitud del lado b: "))
-    c = float(input("Ingrese la longitud del lado c: "))
-    d = float(input("Ingrese la longitud del lado d: "))
-    A = float(input("Ingrese el angulo A (grados): "))
-    B = float(input("Ingrese el angulo B (grados): "))
-    C = float(input("Ingrese el angulo C (grados): "))
-    D = float(input("Ingrese el angulo D (grados): "))
+def main():
+    while True:
+        print("=== Clasificador de Cuadrilateros ===")
+        a = float(input("Ingrese la longitud del lado a: "))
+        b = float(input("Ingrese la longitud del lado b: "))
+        c = float(input("Ingrese la longitud del lado c: "))
+        d = float(input("Ingrese la longitud del lado d: "))
+        A = float(input("Ingrese el angulo A (grados): "))
+        B = float(input("Ingrese el angulo B (grados): "))
+        C = float(input("Ingrese el angulo C (grados): "))
+        D = float(input("Ingrese el angulo D (grados): "))
 
-    validos, errores = validar_datos(a, b, c, d, A, B, C, D)
+        validos, errores = validar_datos(a, b, c, d, A, B, C, D)
 
-    if validos:
-        resultado, explicacion = clasificar_cuadrilatero(a, b, c, d, A, B, C, D)
-        print("Resultado:", resultado)
-        print("Explicacion:", explicacion)
-    else:
-        for error in errores:
-            print(error)
+        if validos:
+            resultado, explicacion = clasificar_cuadrilatero(a, b, c, d, A, B, C, D)
+            print("Resultado:", resultado)
+            print("Explicacion:", explicacion)
+        else:
+            for error in errores:
+                print(error)
 
-    respuesta = input("¿Desea clasificar otra figura? (S/N): ")
-    if respuesta.lower() == "n":
-        break
+        respuesta = input("¿Desea clasificar otra figura? (S/N): ")
+        if respuesta.lower() == "n":
+            break
 
-print("muchas gracias por usar el programa. ¡Hasta luego!")
+    print("muchas gracias por usar el programa. ¡Hasta luego!")
+
+
+if __name__ == "__main__":
+    main()
